@@ -43,7 +43,6 @@ llm = ChatOllama(
     model="llama3",
     temperature=0
 )
-
 # ── 7. Prompt Template ─────────────────────────────────────
 prompt_template = """
 You are an expert assistant that answers questions based strictly on the content
