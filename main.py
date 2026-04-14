@@ -18,8 +18,8 @@ print(f"Loaded {len(pages)} pages.")
 
 # ── 3. Split text ───────────────────────────────────────────
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,       # ⬆ was 500 — larger chunks = more context per retrieval
-    chunk_overlap=100     # ⬆ was 50  — more overlap = fewer cut-off sentences
+    chunk_size=800,
+    chunk_overlap=100
 )
 chunks = splitter.split_documents(pages)
 print(f"Split into {len(chunks)} chunks.")
@@ -46,10 +46,8 @@ llm = ChatOllama(
 
 # ── 7. Prompt Template ─────────────────────────────────────
 prompt_template = """
-You are an expert assistant analyzing a technical project specification (Cahier des Charges) 
-for Port Tanger Alliance — a port operator on the Strait of Gibraltar.
-The document describes a Final Year Engineering Project (PFE) to build an AI-powered 
-scheduling module using Large Language Models (LLMs) to automate port operator shift planning.
+You are an expert assistant that answers questions based strictly on the content
+of uploaded documents. You have no knowledge of the specific document in advance.
 
 Use ONLY the information provided in the context below to answer the question.
 If the answer is not found in the context, respond with:
@@ -64,14 +62,14 @@ CONTEXT:
 QUESTION: {question}
 
 INSTRUCTIONS:
-- Answer in the same language as the question (French or English).
+- Answer in the same language as the question (French, English, or any other language).
 - For broad questions (e.g. "what is this about", "summarize", "context"), structure your answer as:
-    📌 Project Summary
-    🎯 Key Objectives
-    🛠️ Tech Stack
-    📅 Timeline & Deliverables
+    📌 Document Summary
+    🎯 Key Topics / Objectives
+    🛠️ Methods / Tools / Technologies (if applicable)
+    📅 Timeline / Structure (if applicable)
 - For specific questions, answer directly and concisely.
-- Cite the relevant section number (e.g. "Section 3.2") whenever possible.
+- Cite the relevant section, chapter, or page number whenever possible.
 - Use bullet points for lists, not long paragraphs.
 
 ANSWER:
@@ -84,14 +82,13 @@ prompt = PromptTemplate(
 
 # ── 8. RAG Chain ───────────────────────────────────────────
 retriever = vectorstore.as_retriever(
-    search_kwargs={"k": 5}  # ⬆ was 3 — retrieve more chunks for broad questions
+    search_kwargs={"k": 5}
 )
-
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
     return_source_documents=True,
-    chain_type_kwargs={"prompt": prompt}  # ✅ inject custom prompt
+    chain_type_kwargs={"prompt": prompt}
 )
 
 # ── 9. Chat loop ───────────────────────────────────────────
@@ -105,11 +102,17 @@ while True:
         continue
 
     result = qa_chain.invoke({"query": question})
-
     print(f"\nAI: {result['result']}")
-
-    # ✅ Clean page citation (sorted list instead of raw set)
     pages_used = sorted(set(
         d.metadata.get("page", "?") for d in result["source_documents"]
     ))
     print(f"(Source pages: {', '.join(str(p) for p in pages_used)})\n")
+
+
+
+
+
+
+
+
+
